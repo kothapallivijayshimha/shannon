@@ -1,0 +1,21 @@
+import fetch from "node-fetch";
+
+const API_KEY = process.env.HUGGINGFACE_API_KEY;
+
+async function query(data) {
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+  return response.json();
+}
+
+query({ inputs: "Hello, how are you?" }).then(console.log);
+
