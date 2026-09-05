@@ -11,6 +11,13 @@ import { getMode } from './mode.js';
 
 /** Environment variables forwarded to worker containers. */
 const FORWARD_VARS = [
+  'SHANNON_LLM_PROVIDER',
+  'OLLAMA_BASE_URL',
+  'OLLAMA_AUTH_TOKEN',
+  'OLLAMA_MODEL',
+  'OLLAMA_SMALL_MODEL',
+  'OLLAMA_MEDIUM_MODEL',
+  'OLLAMA_LARGE_MODEL',
   'ANTHROPIC_API_KEY',
   'ANTHROPIC_BASE_URL',
   'ANTHROPIC_AUTH_TOKEN',
@@ -97,6 +104,9 @@ export function validateCredentials(): CredentialValidation {
 
   if (process.env.ANTHROPIC_API_KEY) {
     return { valid: true, mode: 'api-key' };
+  }
+  if (process.env.SHANNON_LLM_PROVIDER === 'ollama') {
+    return { valid: true, mode: 'custom-base-url' };
   }
   if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
     return { valid: true, mode: 'oauth' };

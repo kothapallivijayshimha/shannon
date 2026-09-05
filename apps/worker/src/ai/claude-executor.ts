@@ -165,27 +165,34 @@ export async function runClaudePrompt(
   };
 
   // 3a. Apply structured provider config directly to sdkEnv (no process.env mutation)
-  if (providerConfig) {
-    switch (providerConfig.providerType) {
+  const providerType = providerConfig?.providerType || process.env.SHANNON_LLM_PROVIDER;
+  if (providerType) {
+    switch (providerType) {
       case 'bedrock':
         sdkEnv.CLAUDE_CODE_USE_BEDROCK = '1';
-        if (providerConfig.awsRegion) sdkEnv.AWS_REGION = providerConfig.awsRegion;
-        if (providerConfig.awsAccessKeyId) sdkEnv.AWS_ACCESS_KEY_ID = providerConfig.awsAccessKeyId;
-        if (providerConfig.awsSecretAccessKey) sdkEnv.AWS_SECRET_ACCESS_KEY = providerConfig.awsSecretAccessKey;
+        if (providerConfig?.awsRegion) sdkEnv.AWS_REGION = providerConfig.awsRegion;
+        if (providerConfig?.awsAccessKeyId) sdkEnv.AWS_ACCESS_KEY_ID = providerConfig.awsAccessKeyId;
+        if (providerConfig?.awsSecretAccessKey) sdkEnv.AWS_SECRET_ACCESS_KEY = providerConfig.awsSecretAccessKey;
         break;
       case 'vertex':
         sdkEnv.CLAUDE_CODE_USE_VERTEX = '1';
-        if (providerConfig.gcpRegion) sdkEnv.CLOUD_ML_REGION = providerConfig.gcpRegion;
-        if (providerConfig.gcpProjectId) sdkEnv.ANTHROPIC_VERTEX_PROJECT_ID = providerConfig.gcpProjectId;
-        if (providerConfig.gcpCredentialsPath) sdkEnv.GOOGLE_APPLICATION_CREDENTIALS = providerConfig.gcpCredentialsPath;
+        if (providerConfig?.gcpRegion) sdkEnv.CLOUD_ML_REGION = providerConfig.gcpRegion;
+        if (providerConfig?.gcpProjectId) sdkEnv.ANTHROPIC_VERTEX_PROJECT_ID = providerConfig.gcpProjectId;
+        if (providerConfig?.gcpCredentialsPath) sdkEnv.GOOGLE_APPLICATION_CREDENTIALS = providerConfig.gcpCredentialsPath;
         break;
       case 'litellm_router':
-        if (providerConfig.baseUrl) sdkEnv.ANTHROPIC_BASE_URL = providerConfig.baseUrl;
-        if (providerConfig.authToken) sdkEnv.ANTHROPIC_AUTH_TOKEN = providerConfig.authToken;
+        if (providerConfig?.baseUrl) sdkEnv.ANTHROPIC_BASE_URL = providerConfig.baseUrl;
+        if (providerConfig?.authToken) sdkEnv.ANTHROPIC_AUTH_TOKEN = providerConfig.authToken;
+        break;
+      case 'ollama':
+        sdkEnv.ANTHROPIC_BASE_URL =
+          providerConfig?.baseUrl || process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434';
+        sdkEnv.ANTHROPIC_AUTH_TOKEN =
+          providerConfig?.authToken || process.env.OLLAMA_AUTH_TOKEN || 'ollama';
         break;
       default:
         // 'anthropic_api' or unset — apiKey already handled above
-        if (providerConfig.apiKey && !apiKey) sdkEnv.ANTHROPIC_API_KEY = providerConfig.apiKey;
+        if (providerConfig?.apiKey && !apiKey) sdkEnv.ANTHROPIC_API_KEY = providerConfig.apiKey;
         break;
     }
   }
@@ -216,7 +223,9 @@ export async function runClaudePrompt(
 
   // 4. Configure SDK options
   // Model override from providerConfig takes precedence over env-based resolveModel
-  const model = providerConfig?.modelOverrides?.[modelTier] ?? resolveModel(modelTier);
+  const model =
+    providerConfig?.modelOverrides?.[modelTier] ??
+    resolveModel(modelTier, providerType);
   const adaptiveThinking = supportsAdaptiveThinking(model) && process.env.CLAUDE_ADAPTIVE_THINKING !== 'false';
   const options = {
     model,

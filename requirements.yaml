@@ -1,0 +1,117 @@
+version: "0.1"
+status: draft
+scope:
+  primary_platform: shannon
+  secondary_integration: integrations/redteam-ai
+  deployment_targets:
+    - docker
+    - kubernetes
+    - edge-gateway
+  authorization_required: true
+
+security_boundaries:
+  destructive_actions:
+    default: deny
+    require_rules_of_engagement: true
+    require_human_approval: true
+  exploit_reporting:
+    require_reproducible_poc: true
+    require_evidence: true
+  model_output:
+    trusted_as_instruction: false
+    require_deterministic_validation: true
+  secrets:
+    redact_from_prompts: true
+    redact_from_reports: true
+    redact_from_telemetry_exports: true
+
+use_cases:
+  - id: llm-prompt-injection
+    priority: high
+    target: ai-application
+    requires_live_validation: true
+  - id: llm-tool-abuse
+    priority: high
+    target: ai-application
+    requires_live_validation: true
+  - id: rag-poisoning
+    priority: high
+    target: ai-application
+    requires_live_validation: true
+  - id: edge-telemetry-correlation
+    priority: medium
+    target: edge-gateway
+    requires_live_validation: false
+  - id: cryptographic-migration
+    priority: medium
+    target: cloud-native
+    requires_live_validation: false
+
+service_requirements:
+  telemetry:
+    ingest_authenticated_events: true
+    preserve_provenance: true
+    support_redaction: true
+  threat_intelligence:
+    support_cve_and_cwe_metadata: true
+    support_misp_or_stix: true
+    cache_external_feeds: true
+  model_gateway:
+    support_anthropic_compatible: true
+    support_bedrock: true
+    support_vertex: true
+    support_ollama: true
+    expose_capabilities: true
+    enforce_rate_limits: true
+  orchestration:
+    durable_workflows: temporal
+    audit_all_decisions: true
+    support_retries: true
+    support_rollback_records: true
+  explainability:
+    high_severity_explanation_required: true
+    minimum_explanation_characters: 150
+    link_explanations_to_evidence: true
+
+success_metrics:
+  known_pattern_detection_latency_seconds:
+    target: 2
+    comparator: "<"
+  approved_containment_latency_seconds:
+    target: 30
+    comparator: "<"
+  false_positive_rate_percent:
+    target: 5
+    comparator: "<="
+  true_positive_rate_percent:
+    target: 90
+    comparator: ">="
+  monthly_model_drift_percent:
+    target: 2
+    comparator: "<"
+  critical_framework_findings:
+    target: 0
+    comparator: "=="
+
+phase_gates:
+  phase_1:
+    - requirements_reviewed
+    - threat_model_reviewed
+    - data_classification_approved
+    - metrics_have_measurement_plan
+  phase_2:
+    - versioned_event_contracts
+    - policy_contracts
+    - provider_independent_interfaces
+  phase_3:
+    - authenticated_ingestion
+    - provenance_preserved
+    - deterministic_contract_tests
+  phase_4:
+    - model_evaluation_set
+    - drift_monitoring
+    - explanation_validation
+  phase_5:
+    - isolated_tool_execution
+    - rollbackable_actions
+    - human_approval_boundary

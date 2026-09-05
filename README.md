@@ -47,6 +47,26 @@ Shannon identified 20+ vulnerabilities in OWASP Juice Shop, including authentica
 - **Integrated Security Tooling**: Leverages Nmap, Subfinder, WhatWeb, and Schemathesis during reconnaissance and discovery phases.
 - **Parallel Processing**: Vulnerability analysis and exploitation phases run concurrently across all attack categories.
 
+## RedTeam AI Integration
+
+This repository also includes the RedTeam AI reconnaissance service and dashboard under
+[`integrations/redteam-ai/`](integrations/redteam-ai/). It remains a self-contained
+Python/FastAPI, Celery, Redis, and Next.js stack while sharing this repository's
+versioning and review workflow.
+
+Start the integrated RedTeam AI services from the repository root:
+
+```bash
+cd integrations/redteam-ai
+docker compose up --build
+```
+
+- API: `http://localhost:8000`
+- Dashboard: `http://localhost:3000`
+
+See [`integrations/redteam-ai/README.md`](integrations/redteam-ai/README.md) for
+manual development and API details.
+
 ## Product Line
 
 Shannon is developed by [Keygraph](https://keygraph.io) and available in two editions:

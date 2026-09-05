@@ -267,6 +267,37 @@ async function validateCredentials(logger: ActivityLogger, apiKey?: string, prov
   if (apiKey) {
     process.env.ANTHROPIC_API_KEY = apiKey;
   }
+  if (process.env.SHANNON_LLM_PROVIDER === 'ollama') {
+    const baseUrl = process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434';
+    logger.info(`Validating Ollama endpoint: ${baseUrl}`);
+    try {
+      const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/tags`);
+      if (!response.ok) {
+        return err(
+          new PentestError(
+            `Ollama endpoint returned HTTP ${response.status}: ${baseUrl}`,
+            'network',
+            false,
+            { baseUrl, status: response.status },
+            ErrorCode.AUTH_FAILED,
+          ),
+        );
+      }
+      logger.info('Ollama endpoint OK');
+      return ok(undefined);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return err(
+        new PentestError(
+          `Ollama endpoint unreachable: ${baseUrl} — ${message}`,
+          'network',
+          false,
+          { baseUrl },
+          ErrorCode.AUTH_FAILED,
+        ),
+      );
+    }
+  }
   // 1. Custom base URL — validate endpoint is reachable via SDK query
   if (process.env.ANTHROPIC_BASE_URL && process.env.ANTHROPIC_AUTH_TOKEN) {
     const baseUrl = process.env.ANTHROPIC_BASE_URL;

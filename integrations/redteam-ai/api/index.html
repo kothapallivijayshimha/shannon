@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedTeam AI | Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body {
+            background-color: #0a0a0a;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+        }
+        .glow-border {
+            border: 1px solid #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+        .cyber-input {
+            background: rgba(0, 40, 0, 0.3);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            outline: none;
+            background: rgba(0, 60, 0, 0.5);
+        }
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: #00ff41;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: scan 3s linear infinite;
+            z-index: 10;
+            opacity: 0.5;
+        }
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+        .terminal-cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #00ff41;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .agent-card {
+            background: rgba(0, 20, 0, 0.6);
+            border-left: 4px solid #00ff41;
+            transition: transform 0.2s;
+        }
+        .agent-card:hover {
+            transform: translateX(10px);
+            background: rgba(0, 40, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="scan-line"></div>
+
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-4xl font-bold tracking-tighter uppercase italic">
+                <i class="fa-solid fa-skull-crossbones"></i> RedTeam AI <span class="text-white">v3.0</span>
+            </h1>
+            <p class="text-sm opacity-70">Sovereign Autonomous Threat Simulation Engine</p>
+        </div>
+        <div class="text-right">
+            <div id="clock" class="text-xl font-bold">00:00:00</div>
+            <div class="text-xs text-white">STATUS: <span class="text-green-400">OPERATIONAL</span></div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- LEFT PANEL: Input Controls -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="glow-border p-6 rounded-lg bg-black/50 backdrop-blur-md">
+                <h2 class="text-xl mb-4 uppercase font-bold"><i class="fa-solid fa-crosshairs mr-2"></i>Target Acquisition</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs uppercase mb-1 opacity-60">Network Range / IP / Domain</label>
+                        <input id="net_info" type="text" placeholder="e.g. 10.0.0.1/24 or target.com" class="w-full p-3 cyber-input rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase mb-1 opacity-60">System Context</label>
+                        <textarea id="sys_info" rows="3" placeholder="OS, Versions, Patch Level..." class="w-full p-3 cyber-input rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase mb-1 opacity-60">Telemetry Logs</label>
+                        <textarea id="log_info" rows="4" placeholder="Paste raw logs here..." class="w-full p-3 cyber-input rounded"></textarea>
+                    </div>
+                    <button onclick="launchAttack()" class="w-full py-4 bg-green-600 text-black font-bold uppercase hover:bg-green-400 transition-all transform hover:scale-105 rounded shadow-lg shadow-green-900/50">
+                        Execute Pipeline <i class="fa-solid fa-bolt ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glow-border p-6 rounded-lg bg-black/50">
+                <h2 class="text-xl mb-4 uppercase font-bold">Agents Status</h2>
+                <div class="space-y-3">
+                    <div class="agent-card p-3 rounded flex justify-between items-center">
+                        <span><i class="fa-solid fa-magnifying-glass mr-2"></i> Recon Agent</span>
+                        <span class="text-xs bg-green-900 px-2 py-1 rounded text-green-400">ACTIVE</span>
+                    </div>
+                    <div class="agent-card p-3 rounded flex justify-between items-center">
+                        <span><i class="fa-solid fa-bug mr-2"></i> Vuln Agent</span>
+                        <span class="text-xs bg-green-900 px-2 py-1 rounded text-green-400">READY</span>
+                    </div>
+                    <div class="agent-card p-3 rounded flex justify-between items-center">
+                        <span><i class="fa-solid fa- cerebro mr-2"></i> Sim Agent</span>
+                        <span class="text-xs bg-green-900 px-2 py-1 rounded text-green-400">READY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Real-time Console & Report -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="glow-border rounded-lg bg-black h-full min-h-[600px] relative overflow-hidden flex flex-col">
+                <div class="bg-green-900/30 p-3 border-b border-green-500 flex justify-between font-bold text-sm">
+                    <span><i class="fa-solid fa-terminal mr-2"></i>LIVE_SESSION_LOGS</span>
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                
+                <div id="console" class="p-4 text-sm overflow-y-auto flex-grow font-mono leading-relaxed">
+                    <div class="text-gray-500">[SYSTEM] Waiting for target acquisition...</div>
+                    <div class="text-gray-500">[SYSTEM] All agents standing by... <span class="terminal-cursor"></span></div>
+                </div>
+
+                <div id="final-report" class="hidden p-6 border-t-2 border-green-500 bg-green-900/10 animate-in fade-in duration-1000">
+                    <h3 class="text-2xl font-bold text-white mb-4 uppercase italic underline">Final Executive Analysis</h3>
+                    <div id="report-content" class="text-gray-300 whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+
+        async function log(message, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const time = new Date().toLocaleTimeString();
+            let color = "text-green-400";
+            if(type === 'warn') color = "text-yellow-400";
+            if(type === 'error') color = "text-red-500";
+            if(type === 'success') color = "text-white font-bold";
+
+            consoleDiv.innerHTML += `<div class="mb-1 ${color}">[${time}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        async function launchAttack() {
+            const net = document.getElementById('net_info').value;
+            const sys = document.getElementById('sys_info').value;
+            const logs = document.getElementById('log_info').value;
+
+            if(!net) {
+                alert("Please enter a target network!");
+                return;
+            }
+
+            document.getElementById('final-report').classList.add('hidden');
+            document.getElementById('console').innerHTML = '';
+            
+            log("Initializing RedTeam Pipeline...", "info");
+            await new Promise(r => setTimeout(r, 800));
+            
+            log("Connecting to Target: " + net, "info");
+            await new Promise(r => setTimeout(r, 1200));
+            log("ReconAgent: Mapping attack surface...", "info");
+            await new Promise(r => setTimeout(r, 1500));
+            log("ReconAgent: Assets organized. Memory updated.", "success");
+            
+            await new Promise(r => setTimeout(r, 1000));
+            log("VulnerabilityAgent: Scanning for CVEs and Misconfigs...", "info");
+            await new Promise(r => setTimeout(r, 2000));
+            log("VulnerabilityAgent: Found 3 high-criticality flaws.", "warn");
+            
+            await new Promise(r => setTimeout(r, 1000));
+            log("SimulationAgent: Calculating attack paths...", "info");
+            await new Promise(r => setTimeout(r, 2000));
+            log("SimulationAgent: Attack chain established (SSH -> SMB -> DC).", "success");
+
+            log("Orchestrator: Synthesizing final executive report...", "info");
+            await new Promise(r => setTimeout(r, 1500));
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ network_info: net, system_details: sys, logs: logs })
+                });
+                const data = await response.json();
+                
+                document.getElementById('final-report').classList.remove('hidden');
+                document.getElementById('report-content').innerText = data.report;
+                log("--- PIPELINE COMPLETE ---", "success");
+            } catch (e) {
+                log("ERROR: Could not connect to Backend API. Ensure server is running.", "error");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -5,3 +5,12 @@ credentials/
 dist/
 repos/
 .turbo/
+
+# RedTeam AI integration
+integrations/redteam-ai/api/__pycache__/
+integrations/redteam-ai/api/.pytest_cache/
+integrations/redteam-ai/api/venv/
+integrations/redteam-ai/dashboard/node_modules/
+integrations/redteam-ai/dashboard/.next/
+integrations/redteam-ai/.env
+integrations/redteam-ai/dashboard/.env.local
